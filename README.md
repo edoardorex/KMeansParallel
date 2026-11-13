@@ -1,60 +1,75 @@
-# KMeansParallel
-Progetto mid-term di Parallel Computing, versione parallela dell' implementazione [KMeansSequential](https://github.com/edoardore/KMeansSequential)
+# Parallel K-Means with OpenMP
 
-## Utilizzo
-Eseguire il modulo main.cpp, cambiare i valori delle variabili globali per diversi risultati:
-```c++
-double Range = 99999;
+An OpenMP version of the
+[sequential k-means project](https://github.com/edoardorex/KMeansSequential),
+exploring parallel point assignment with **Array of Structures (AoS)** and
+**Structure of Arrays (SoA)** layouts.
+
+## How it works
+
+The program generates two-dimensional random points and cluster centroids,
+assigns points to the nearest cluster, and repeatedly updates centroids.
+OpenMP sections parallelize initialization, parallel loops distribute
+assignment work, and atomic operations protect cluster accumulation.
+
+It prints initialization and clustering timings and invokes Gnuplot to display
+cluster-colored scatter plots.
+
+## Configuration
+
+The current settings in [main.cpp](main.cpp) are:
+
+```cpp
+double Range = 100000;
 const int nPoint = 5000;
 int nCluster = 5;
 int itr = 20;
 ```
-È possibile modificare i due booleani per eseguire il codice con i punti in Array of Structures (AoS) oppure in Structure of Arrays (SoA):
-```c++
-bool AoS = TRUE;
-bool SoA = TRUE;
+
+`AoS` and `SoA` in `main()` are both enabled. Change them to run one layout at a
+time, and rebuild after changing source settings. The stopping rule is centroid
+stability or the iteration limit.
+
+The OpenMP runtime can be configured through its standard environment variables,
+such as `OMP_NUM_THREADS`; the program has no thread-count CLI option.
+
+## Build and run
+
+Use a C++11 toolchain supporting GNU-style `-fopenmp`, an OpenMP runtime,
+and the Windows `windef.h` header. The checked-in configuration is
+Windows/GNU-oriented; other platforms need adaptation.
+Install [Gnuplot](http://www.gnuplot.info/) and make `gnuplot` available on `PATH`.
+
+With the compiler configured and CMake 3.13 or newer:
+
+```sh
+cmake -S . -B build
+cmake --build build --target KMeansOpenMPParallel
 ```
 
-## Esecuzione
-Il programma genererà sulla base dei valori impostati in nPoint e nCluster, in questo esempio 5000 punti casuali e 5 cluster casuali nei quali successivamente aggiornerà i centroidi e le appartenenze dei punti ai clusters.
+Run the generated `KMeansOpenMPParallel` executable in a graphical environment.
+Plotting creates and removes `dataPoint.txt` and `dataPointArray.txt` in the
+working directory.
 
+![Historical clustering visualization](gnuplot.PNG)
 
+## Repository guide
 
-## Esempio di output del file ```main.cpp```
-```
-**********************Points in AoS************************
-Creazione di 5000 punti casuali
-Creazione di 5 Clusters
-Punti e Clusters generati in: 0.00300002s
-Aggiornamento dei Clusters con 20 iterazioni in: 0.0930002s
-**********************Points in SoA************************
-Creazione di 5000 punti casuali
-Creazione di 5 Clusters
-Punti e Clusters generati in: 0.00200009s
-Aggiornamento dei Clusters con 20 iterazioni in: 0.0569999s
+| File | Purpose |
+| --- | --- |
+| [main.cpp](main.cpp) | AoS/SoA data, OpenMP regions, assignment, timing, and plotting |
+| [Cluster.h](Cluster.h) | Centroid accumulation with OpenMP atomics |
+| [CMakeLists.txt](CMakeLists.txt) | Build target and compiler flags |
 
-Process finished with exit code 0
-```
-![gnuplot results](https://github.com/edoardore/KMeansParallel/blob/master/gnuplot.PNG)
+This is an educational performance experiment. Speedup depends on workload,
+thread count, random initialization, and hardware; the included screenshot is
+not a reproducible benchmark result.
 
+## Attribution
 
-## Librerie utilizzate
-```c++
-#include <iostream>
-#include <chrono>
-#include <omp.h>
-#include <cmath>
-#include <fstream>
-#include <vector>
-#include <windef.h>
-#include "Cluster.h"
-```
-Attenzione: solitamente sugli IDE più comuni sono quasi tutte presenti tranne per [gnuplot](http://www.gnuplot.info/download.html).
+The original README credits **Edoardo Re, 2020**.
+This repository is a fork of
+[edoardore/KMeansParallel](https://github.com/edoardore/KMeansParallel).
+Original source and history are preserved; no license is added or changed.
 
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-Please make sure to update tests as appropriate.
-
-
-## License
-[Edoardo Re](https://github.com/edoardore), 2020
+Discuss substantial changes in an issue and include appropriate tests.
